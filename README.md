@@ -4,7 +4,7 @@ A web-based puzzle solver for the Bird Sort Quest game with advanced features in
 
 ## 🎮 Live Demo
 
-Visit: [https://YOUR-USERNAME.github.io/bird-sort-solver/](https://YOUR-USERNAME.github.io/BirdSortSolver/)
+Visit: [https://KalaNamak.github.io/BirdSortSolver/](https://KalaNamak.github.io/BirdSortSolver/)
 
 ## ✨ Features
 
