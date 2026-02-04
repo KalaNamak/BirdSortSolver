@@ -4,7 +4,7 @@ A web-based puzzle solver for the Bird Sort Quest game with advanced features in
 
 ## 🎮 Live Demo
 
-Visit: [https://YOUR-USERNAME.github.io/bird-sort-solver/](https://YOUR-USERNAME.github.io/bird-sort-solver/)
+Visit: [https://KalaNamak.github.io/BirdSortSolver/](https://KalaNamak.github.io/BirdSortSolver/)
 
 ## ✨ Features
 
@@ -26,8 +26,8 @@ Just visit the GitHub Pages link above!
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/YOUR-USERNAME/bird-sort-solver.git
-cd bird-sort-solver
+git clone https://github.com/YOUR-USERNAME/BirdSortSolver.git
+cd BirdSortSolver
 ```
 
 2. Open `index.html` in your browser:
@@ -41,9 +41,9 @@ That's it! No build tools or npm required.
 ## 📁 Project Structure
 
 ```
-bird-sort-solver/
+BirdSortSolver/
 ├── index.html              # Main HTML file with CDN links
-├── BirdSortSolver-CDN.jsx  # React component (JSX)
+├── BirdSortSolver.jsx      # React component (JSX)
 └── README.md               # This file
 ```
 
@@ -98,7 +98,7 @@ When viewing solutions:
 This project uses no build tools! The JSX is transformed at runtime by Babel Standalone.
 
 To modify:
-1. Edit `BirdSortSolver-CDN.jsx`
+1. Edit `BirdSortSolver.jsx`
 2. Refresh your browser
 3. Changes appear immediately
 
