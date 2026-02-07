@@ -283,10 +283,11 @@ const BirdSortSolver = () => {
       
       if (!move) return;
       
-      const prevState = solution.length > 0 && currentStep > 1
-        ? solution[currentStep - 2].state
-        : discoveryStep > 1
-        ? discoveryMoves[discoveryStep - 2].state
+      // FIX: Use correct previous state for both solution and discovery modes
+      const prevState = solution.length > 0 && currentStep > 0
+        ? (currentStep > 1 ? solution[currentStep - 2].state : branches)
+        : discoveryStep > 0
+        ? (discoveryStep > 1 ? discoveryMoves[discoveryStep - 2].state : branches)
         : branches;
       
       const birdsToMove = move.birdsToMove || 1;
@@ -693,7 +694,30 @@ const BirdSortSolver = () => {
                 });
               });
               setBranches(resetToStart);
-              setMessage(`✓ ${discovered}/${total}. Ready for next chain - click 'Find Next Hidden'.`);
+              
+              // FIX BUG #2: Auto-start next discovery chain if more birds remain
+              const remainingBirds = total - discovered;
+              if (remainingBirds > 0) {
+                setMessage(`✓ ${discovered}/${total}. Starting next chain...`);
+                // Try to find next hidden bird automatically
+                setTimeout(() => {
+                  const nextResult = findMovesToExposeHidden(resetToStart, birdsPerBranch);
+                  if (nextResult.success) {
+                    setTargetHiddenPosition(nextResult.exposedPosition);
+                    if (nextResult.moves.length === 0) {
+                      setMessage(`✓ ${discovered}/${total}. Next bird exposed! Select and place.`);
+                    } else {
+                      setDiscoveryMoves(nextResult.moves);
+                      setDiscoveryStep(0);
+                      setMessage(`✓ ${discovered}/${total}. New chain found with ${nextResult.moves.length} move(s).`);
+                    }
+                  } else {
+                    setMessage(`✓ ${discovered}/${total}. Ready - click 'Find Next Hidden' to continue.`);
+                  }
+                }, 100);
+              } else {
+                setMessage(`✓ ${discovered}/${total}. Ready for next chain - click 'Find Next Hidden'.`);
+              }
             }, 800); // Small delay so user sees "Chain complete" message
           }
         }, 100);
