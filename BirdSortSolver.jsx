@@ -2037,11 +2037,32 @@ const BirdSortSolver = () => {
           // Get source ref
           const fromRect = fromRef.getBoundingClientRect();
           
-          // Calculate destination position manually since refs might not exist yet
-          // Find any ref on the destination branch to use as a base
+          // Calculate destination position based on the DESTINATION state
+          // Find the leftmost/rightmost bird ref on the destination branch to use as base (position 0)
+          // This ensures we calculate from a stable reference point
           let baseRef = null;
-          for (let i = birdsPerBranch - 1; i >= 0 && !baseRef; i--) {
-            baseRef = birdRefs.current[`${flyingBird.toBranch}-${i}`];
+          let basePosition = -1;
+          
+          // Find position 0 bird as our base reference (most stable position)
+          for (let i = 0; i < birdsPerBranch; i++) {
+            const ref = birdRefs.current[`${flyingBird.toBranch}-${i}`];
+            if (ref) {
+              baseRef = ref;
+              basePosition = i;
+              break;
+            }
+          }
+          
+          // If no base found, try from the end
+          if (!baseRef) {
+            for (let i = birdsPerBranch - 1; i >= 0; i--) {
+              const ref = birdRefs.current[`${flyingBird.toBranch}-${i}`];
+              if (ref) {
+                baseRef = ref;
+                basePosition = i;
+                break;
+              }
+            }
           }
           
           if (!baseRef) return null;
@@ -2051,29 +2072,24 @@ const BirdSortSolver = () => {
           // Calculate where the bird should land
           // Birds are positioned with gap-1 (4px) between them
           const birdGap = 4;
-          const totalGap = birdGap * toPositionIndex;
           
           // Determine if branch is odd or even (for left/right positioning)
           const isOddBranch = flyingBird.toBranch % 2 === 0;
           
-          // Calculate destination position
-          // The baseRef might be at any position, so we need to calculate offset
-          let toX = baseRect.left;
-          let toY = baseRect.top;
+          // ALWAYS calculate position relative to base, never trust other refs during animation
+          // Calculate offset from base position to target position
+          const offsetFromBase = toPositionIndex - basePosition;
           
-          // Try to find exact ref first for most accurate position
-          const exactRef = birdRefs.current[`${flyingBird.toBranch}-${toPositionIndex}`];
-          if (exactRef) {
-            const exactRect = exactRef.getBoundingClientRect();
-            toX = exactRect.left;
-            toY = exactRect.top;
+          let toX, toY;
+          toY = baseRect.top; // Y is always the same for birds on same branch
+          
+          // Calculate X based on direction and offset
+          if (isOddBranch) {
+            // Odd branches grow to the right
+            toX = baseRect.left + (offsetFromBase * (birdSize + birdGap));
           } else {
-            // Approximate based on bird size and gap
-            if (isOddBranch) {
-              toX = baseRect.left + (toPositionIndex * (birdSize + birdGap));
-            } else {
-              toX = baseRect.left - (toPositionIndex * (birdSize + birdGap));
-            }
+            // Even branches grow to the left
+            toX = baseRect.left - (offsetFromBase * (birdSize + birdGap));
           }
           
           const deltaX = toX - fromRect.left;
