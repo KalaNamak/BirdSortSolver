@@ -2029,67 +2029,61 @@ const BirdSortSolver = () => {
           const toBranchState = destinationState[flyingBird.toBranch];
           if (!toBranchState) return null;
           
-          // Each bird lands at a different position!
-          // First bird (index 0) goes to top, second bird goes one below, etc.
-          const totalBirdsInDestination = toBranchState.filter(b => b !== null).length;
-          const toPositionIndex = totalBirdsInDestination - 1 - birdIndex;
+          // Find the ACTUAL positions where birds exist in the destination state
+          // We need to map birdIndex to the actual array position in toBranchState
+          const nonNullPositions = [];
+          for (let i = 0; i < toBranchState.length; i++) {
+            if (toBranchState[i] !== null && toBranchState[i] !== undefined) {
+              nonNullPositions.push(i);
+            }
+          }
+          
+          // Birds are added to the top (end) of the array
+          // birdIndex 0 is the first bird to fly (was at the top of source), goes to top of destination
+          // So it should be at the LAST position in nonNullPositions
+          const reversedIndex = nonNullPositions.length - 1 - birdIndex;
+          if (reversedIndex < 0 || reversedIndex >= nonNullPositions.length) return null;
+          
+          const toPositionIndex = nonNullPositions[reversedIndex];
           
           // Get source ref
           const fromRect = fromRef.getBoundingClientRect();
           
-          // Calculate destination position based on the DESTINATION state
-          // Find the leftmost/rightmost bird ref on the destination branch to use as base (position 0)
-          // This ensures we calculate from a stable reference point
-          let baseRef = null;
-          let basePosition = -1;
+          // NEW APPROACH: Calculate destination from branch container position
+          // Find the branch container itself for more reliable positioning
+          let branchContainer = null;
           
-          // Find position 0 bird as our base reference (most stable position)
+          // Try to find any bird on the destination branch to get to its parent container
           for (let i = 0; i < birdsPerBranch; i++) {
             const ref = birdRefs.current[`${flyingBird.toBranch}-${i}`];
             if (ref) {
-              baseRef = ref;
-              basePosition = i;
+              // Navigate up to find the flex container
+              branchContainer = ref.parentElement;
               break;
             }
           }
           
-          // If no base found, try from the end
-          if (!baseRef) {
-            for (let i = birdsPerBranch - 1; i >= 0; i--) {
-              const ref = birdRefs.current[`${flyingBird.toBranch}-${i}`];
-              if (ref) {
-                baseRef = ref;
-                basePosition = i;
-                break;
-              }
-            }
-          }
+          if (!branchContainer) return null;
           
-          if (!baseRef) return null;
-          
-          const baseRect = baseRef.getBoundingClientRect();
+          const containerRect = branchContainer.getBoundingClientRect();
           
           // Calculate where the bird should land
-          // Birds are positioned with gap-1 (4px) between them
           const birdGap = 4;
           
           // Determine if branch is odd or even (for left/right positioning)
           const isOddBranch = flyingBird.toBranch % 2 === 0;
           
-          // ALWAYS calculate position relative to base, never trust other refs during animation
-          // Calculate offset from base position to target position
-          const offsetFromBase = toPositionIndex - basePosition;
-          
           let toX, toY;
-          toY = baseRect.top; // Y is always the same for birds on same branch
+          // Y position: birds sit at the bottom of the container
+          toY = containerRect.bottom - birdSize - 4; // 4px padding-bottom
           
-          // Calculate X based on direction and offset
+          // X position: calculate from container edge based on position index
           if (isOddBranch) {
-            // Odd branches grow to the right
-            toX = baseRect.left + (offsetFromBase * (birdSize + birdGap));
+            // Odd branches: grow left to right from container left edge
+            toX = containerRect.left + (toPositionIndex * (birdSize + birdGap));
           } else {
-            // Even branches grow to the left
-            toX = baseRect.left - (offsetFromBase * (birdSize + birdGap));
+            // Even branches with flex-row-reverse: grow right to left from container right edge
+            toX = containerRect.right - (toPositionIndex + 1) * (birdSize + birdGap) + birdGap;
           }
           
           const deltaX = toX - fromRect.left;
